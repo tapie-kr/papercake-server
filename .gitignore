@@ -1,5 +1,7 @@
-# ENV File
+# Project Files
 .env
+server.crt
+server.key
 
 # Logs
 logs
