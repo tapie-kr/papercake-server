@@ -1,7 +1,8 @@
-import Fastify from "fastify";
-import fastifyCors from "@fastify/cors";
 import "dotenv/config";
+import Fastify from "fastify";
 import { readFileSync } from "node:fs";
+import fastifyCors from "@fastify/cors";
+import staticController from "./controller/static.controller";
 
 async function createApp() {
   const httpsOptions = {
@@ -19,9 +20,10 @@ async function createApp() {
     credentials: true,
     methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
   });
+
+  await server.register(staticController);
+
   return server;
 }
 
-const server = createApp();
-
-export default server;
+export default createApp;
