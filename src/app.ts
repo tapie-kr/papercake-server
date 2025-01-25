@@ -19,8 +19,18 @@ async function createApp() {
     requestTimeout: 30000,
   });
 
+  server.addContentTypeParser("*", function (request, payload, done) {
+    let data = "";
+    payload.on("data", (chunk) => {
+      data += chunk;
+    });
+    payload.on("end", () => {
+      done(null, data);
+    });
+  });
+
   await server.register(fastifyCors, {
-    origin: process.env.FRONTEND_URL || "*",
+    origin: "http://localhost:5173",
     credentials: true,
     methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
   });
