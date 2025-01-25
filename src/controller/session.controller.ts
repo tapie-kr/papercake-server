@@ -42,10 +42,14 @@ export default async function sessionController(fastify: FastifyInstance) {
             targetHost: "bing.com",
           });
         } else if (SessionThirdStepQuery.every((key) => key in request.query)) {
-          await handleDataSession({
+          const response = await handleDataSession({
             ...sessionParams,
             query: request.query,
+            copyCookies: ["MUID", "SM"],
           });
+          console.log("RAW!!!!", response.data);
+          reply.headers(response.headers);
+          reply.send(response.data);
         }
       } catch (error) {
         request.log.error(error);
