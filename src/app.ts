@@ -4,6 +4,7 @@ import { readFileSync } from "node:fs";
 import fastifyCors from "@fastify/cors";
 import fastifySensible from "@fastify/sensible";
 import staticController from "@/controller/static.controller";
+import scriptController from "@/controller/script.controller";
 
 async function createApp() {
   const httpsOptions = {
@@ -24,6 +25,7 @@ async function createApp() {
   await server.register(fastifySensible);
 
   await server.register(staticController);
+  await server.register(scriptController);
 
   return server;
 }
