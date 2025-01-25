@@ -12,6 +12,7 @@ interface SessionParams {
   reply: FastifyReply;
   query?: Record<string, string>;
   targetHost?: string;
+  copyCookies?: string[];
 }
 
 type SessionResponse = {
@@ -25,10 +26,32 @@ async function makeSessionRequest(
   params: SessionParams,
   targetHost: string,
 ): Promise<SessionResponse> {
-  const instance = await browserClient.create(SiteType.SESSION_CREATE);
+  const headers = Object.entries(params.request.headers)
+    .filter(([key]) => key.toLowerCase() !== "cookie")
+    .reduce((acc, [key, value]) => ({ ...acc, [key]: value }), {});
+
+  const instance = await browserClient.create(SiteType.SESSION_CREATE, {
+    headers: {
+      // ...headers,
+      ...(params.request.headers.cookie && params.copyCookies?.length
+        ? {
+            cookie: params.request.headers.cookie
+              .split(";")
+              .map((cookie) => cookie.trim())
+              .filter((cookie) =>
+                params.copyCookies?.some((key) => cookie.startsWith(`${key}=`)),
+              )
+              .join("; "),
+          }
+        : {}),
+    },
+  });
+
+  const requestConfig = params.query ? { params: params.query } : {};
+
   const response = await instance.get(
     `https://${params.server}.${targetHost}/${params.filename}.gif`,
-    params.query ? { params: params.query } : undefined,
+    requestConfig,
   );
 
   return {
@@ -41,7 +64,13 @@ async function makeSessionRequest(
 
 export async function handleRedirectSession(params: SessionParams) {
   const hostURI = getCurrentHostURI(params.request);
-  const response = await makeSessionRequest(params, params.targetHost ?? "clarity.ms");
+  const response = await makeSessionRequest(
+    {
+      ...params,
+      copyCookies: ["MUID", "SM"],
+    },
+    params.targetHost ?? "clarity.ms",
+  );
 
   if (response.status !== 302) {
     params.reply.send(
@@ -57,13 +86,22 @@ export async function handleRedirectSession(params: SessionParams) {
     `${hostURI}/session/c/$2.gif$3`,
   );
 
-  const headers = convertAxiosHeadersToFastify(response.headers, params.request);
+  const headers = convertAxiosHeadersToFastify(
+    response.headers,
+    params.request,
+  );
   params.reply.headers(headers);
   params.reply.redirect(convertedURI!, 302);
 }
 
 export async function handleDataSession(params: SessionParams) {
-  const response = await makeSessionRequest(params, "clarity.ms");
+  const response = await makeSessionRequest(
+    {
+      ...params,
+      copyCookies: ["MUID", "SM"],
+    },
+    "clarity.ms",
+  );
 
   if (response.status !== 200) {
     params.reply.send(
@@ -71,10 +109,14 @@ export async function handleDataSession(params: SessionParams) {
         "Response from an invalid server.",
       ),
     );
-    return;
   }
 
-  const headers = convertAxiosHeadersToFastify(response.headers, params.request);
-  params.reply.headers(headers);
-  params.reply.send(response.data);
+  const headers = convertAxiosHeadersToFastify(
+    response.headers,
+    params.request,
+  );
+  return {
+    headers: headers,
+    data: response.data,
+  };
 }
