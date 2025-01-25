@@ -3,6 +3,7 @@ import axios, { AxiosInstance, AxiosRequestConfig } from "axios";
 export enum SiteType {
   CLARITY_INJECT = "CLARITY_INJECT",
   SESSION_CREATE = "SESSION_CREATE",
+  COLLECT_DATA = "COLLECT_DATA",
 }
 
 const defaultHeaders: Record<SiteType, Record<string, string>> = {
@@ -11,6 +12,11 @@ const defaultHeaders: Record<SiteType, Record<string, string>> = {
     Accept: "image/avif,image/webp,image/apng,image/svg+xml,image/*,*/*;q=0.8",
     "Accept-Encoding": "gzip, deflate, br, zstd",
     priority: "i",
+  },
+  [SiteType.COLLECT_DATA]: {
+    Accept: "application/x-clarity-gzip",
+    "Accept-Encoding": "gzip, deflate, br, zstd",
+    Priority: "u=1, i",
   },
 };
 
