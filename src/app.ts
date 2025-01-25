@@ -2,7 +2,7 @@ import "dotenv/config";
 import Fastify from "fastify";
 import { readFileSync } from "node:fs";
 import fastifyCors from "@fastify/cors";
-import staticController from "./controller/static.controller";
+import staticController from "@/controller/static.controller";
 
 async function createApp() {
   const httpsOptions = {

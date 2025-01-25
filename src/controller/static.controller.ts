@@ -1,5 +1,5 @@
 import { FastifyInstance, FastifyRequest, FastifyReply } from "fastify";
-import CacheManager from "../common/cache";
+import CacheManager from "@/common/cache";
 
 export default async function staticController(fastify: FastifyInstance) {
   const cacheManager = new CacheManager();
