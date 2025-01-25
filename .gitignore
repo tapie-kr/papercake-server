@@ -2,6 +2,7 @@
 .env
 server.crt
 server.key
+cache
 
 # Logs
 logs
