@@ -1,4 +1,5 @@
 import "dotenv/config";
+import { FastifyRequest } from "fastify";
 
 function parseENVList(input: string): string[] {
   return input.split(",").map((id) => id.trim());
@@ -12,4 +13,14 @@ function isValidProjectId(projectId: string): boolean {
   return ALLOW_PROJECT_ID.includes(projectId);
 }
 
-export { parseENVList, isValidProjectId };
+function getCurrentHostURI(request: FastifyRequest): string {
+  const protocol = request.protocol;
+  const hostname = request.hostname;
+  const port = request.server.addresses()[0].port;
+
+  return port === 80 || port === 443
+    ? `${protocol}://${hostname}`
+    : `${protocol}://${hostname}:${port}`;
+}
+
+export { parseENVList, isValidProjectId, getCurrentHostURI };
