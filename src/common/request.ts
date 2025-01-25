@@ -1,4 +1,5 @@
 import axios, { AxiosInstance, AxiosRequestConfig } from "axios";
+import * as https from "node:https";
 
 export enum SiteType {
   CLARITY_INJECT = "CLARITY_INJECT",
@@ -25,11 +26,29 @@ export class BrowserClient {
 
   constructor() {
     this.axiosInstance = axios.create({
-      timeout: 5000,
       maxRedirects: 0,
+      // proxy: {
+      //   host: "localhost",
+      //   port: 8080,
+      //   protocol: "http",
+      // },
       validateStatus: (status) => {
         return status >= 200 && status < 400;
       },
+      httpsAgent: new https.Agent({
+        rejectUnauthorized: false,
+      }),
+    });
+
+    this.axiosInstance.interceptors.request.use((config) => {
+      console.log("[Axios Request]", {
+        url: config.url,
+        method: config.method?.toUpperCase(),
+        headers: config.headers,
+        params: config.params,
+        bodyLength: config.data?.length || 0,
+      });
+      return config;
     });
   }
 
@@ -37,7 +56,7 @@ export class BrowserClient {
     siteType: SiteType,
     config?: AxiosRequestConfig,
   ): Promise<AxiosInstance> {
-    return axios.create({
+    const instance = axios.create({
       ...this.axiosInstance.defaults,
       headers: {
         ...this.axiosInstance.defaults.headers,
@@ -48,6 +67,32 @@ export class BrowserClient {
         },
       },
     });
+
+    // Add request logging
+    instance.interceptors.request.use((config) => {
+      console.log("[Axios Request]", {
+        url: config.url,
+        method: config.method?.toUpperCase(),
+        headers: config.headers,
+        params: config.params,
+        bodyLength: config.data?.length || 0,
+      });
+      return config;
+    });
+
+    // Add response logging
+    instance.interceptors.response.use((response) => {
+      console.log("[Axios Response]", {
+        status: response.status,
+        headers: response.headers,
+        data: response.data,
+        url: response.config.url,
+        method: response.config.method?.toUpperCase(),
+      });
+      return response;
+    });
+
+    return instance;
   }
 }
 
