@@ -14,3 +14,5 @@ const ALLOW_PROJECT_ID = parseENVList(
 function isValidProjectId(projectId: string): boolean {
   return ALLOW_PROJECT_ID.includes(projectId);
 }
+
+export { parseENVList, isValidProjectId };
