@@ -24,10 +24,10 @@ export default async function scriptController(fastify: FastifyInstance) {
         "https://www.clarity.ms/tag/" + projectId,
         {
           params: request.query,
+          headers: request.headers,
         },
       );
       const hostURI = getCurrentHostURI(request);
-      console.log(hostURI);
       const originalScript = response.data as string;
       const modifiedScript = originalScript
         .replace(
@@ -35,8 +35,8 @@ export default async function scriptController(fastify: FastifyInstance) {
           `${hostURI}/collect?server=$1`,
         )
         .replace(
-          /https:\/\/[^/]+\.clarity\.ms\/([^"]+)\.gif/g,
-          `${hostURI}/session/$1.gif?server=$1`,
+          /https:\/\/([^/]+)\.clarity\.ms\/([^"]+)\.gif/g,
+          `${hostURI}/session/$1/$2.gif`,
         )
         .replace(
           /https:\/\/www\.clarity\.ms\/s\/(.+)\/clarity\.js/,
