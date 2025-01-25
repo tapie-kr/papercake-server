@@ -1,7 +1,15 @@
 import { FastifyInstance, FastifyRequest, FastifyReply } from "fastify";
-import { isValidProjectId } from "@/common/utils";
-import { SessionSecondStepQuery } from "@/common/variable";
-import { createSession } from "@/common/session";
+import {
+  convertAxiosHeadersToFastify,
+  getCurrentHostURI,
+  isValidProjectId,
+} from "@/common/utils";
+import {
+  SessionSecondStepQuery,
+  SessionThirdStepQuery,
+} from "@/common/variable";
+import { handleRedirectSession, handleDataSession } from "@/common/session";
+import { browserClient, SiteType } from "@/common/request";
 
 // https://localhost/session/c/c.gif
 
@@ -26,17 +34,26 @@ export default async function sessionController(fastify: FastifyInstance) {
         return;
       }
 
-      if (Object.keys(request.query).length === 0) {
-        await createSession({ server, filename, request, reply });
-      } else if (SessionSecondStepQuery.every((key) => key in request.query)) {
-        await createSession({
-          server,
-          filename,
-          request,
-          reply,
-          query: request.query,
-          targetHost: 'bing.com',
-        });
+      const sessionParams = { server, filename, request, reply };
+
+      try {
+        if (Object.keys(request.query).length === 0) {
+          await handleRedirectSession(sessionParams);
+        } else if (SessionSecondStepQuery.every((key) => key in request.query)) {
+          await handleRedirectSession({
+            ...sessionParams,
+            query: request.query,
+            targetHost: "bing.com",
+          });
+        } else if (SessionThirdStepQuery.every((key) => key in request.query)) {
+          await handleDataSession({
+            ...sessionParams,
+            query: request.query,
+          });
+        }
+      } catch (error) {
+        request.log.error(error);
+        reply.code(500).send({ error: "Failed to handle session request" });
       }
     },
   );

@@ -14,38 +14,67 @@ interface SessionParams {
   targetHost?: string;
 }
 
-export async function createSession({
-  server,
-  filename,
-  request,
-  reply,
-  query,
-  targetHost = "clarity.ms",
-}: SessionParams) {
-  const hostURI = getCurrentHostURI(request);
-  const instance = await browserClient.create(SiteType.SESSION_CREATE);
+type SessionResponse = {
+  status: number;
+  headers: Record<string, any>;
+  data?: any;
+  location?: string;
+};
 
+async function makeSessionRequest(
+  params: SessionParams,
+  targetHost: string,
+): Promise<SessionResponse> {
+  const instance = await browserClient.create(SiteType.SESSION_CREATE);
   const response = await instance.get(
-    `https://${server}.${targetHost}/${filename}.gif`,
-    query ? { params: query } : undefined,
+    `https://${params.server}.${targetHost}/${params.filename}.gif`,
+    params.query ? { params: params.query } : undefined,
   );
 
+  return {
+    status: response.status,
+    headers: response.headers,
+    data: response.data,
+    location: response.headers["location"],
+  };
+}
+
+export async function handleRedirectSession(params: SessionParams) {
+  const hostURI = getCurrentHostURI(params.request);
+  const response = await makeSessionRequest(params, params.targetHost ?? "clarity.ms");
+
   if (response.status !== 302) {
-    reply.send(
-      request.server.httpErrors.internalServerError(
+    params.reply.send(
+      params.request.server.httpErrors.internalServerError(
         "Response from an invalid server.",
       ),
     );
     return;
   }
 
-  const redirectURI = response.headers["location"] as string;
-  const convertedURI = redirectURI.replace(
+  const convertedURI = response.location?.replace(
     /https:\/\/c\.(clarity\.ms|bing\.com)\/([^"?]+)\.gif(\?[^"]*)?/g,
     `${hostURI}/session/c/$2.gif$3`,
   );
 
-  const headers = convertAxiosHeadersToFastify(response.headers, request);
-  reply.headers(headers);
-  reply.redirect(convertedURI, 302);
+  const headers = convertAxiosHeadersToFastify(response.headers, params.request);
+  params.reply.headers(headers);
+  params.reply.redirect(convertedURI!, 302);
+}
+
+export async function handleDataSession(params: SessionParams) {
+  const response = await makeSessionRequest(params, "clarity.ms");
+
+  if (response.status !== 200) {
+    params.reply.send(
+      params.request.server.httpErrors.internalServerError(
+        "Response from an invalid server.",
+      ),
+    );
+    return;
+  }
+
+  const headers = convertAxiosHeadersToFastify(response.headers, params.request);
+  params.reply.headers(headers);
+  params.reply.send(response.data);
 }
