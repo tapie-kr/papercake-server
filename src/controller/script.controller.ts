@@ -1,5 +1,6 @@
 import { FastifyInstance, FastifyRequest, FastifyReply } from "fastify";
-import { isValidProjectId } from "@/common/utils";
+import { isValidProjectId, getCurrentHostURI } from "@/common/utils";
+import { browserClient, SiteType } from "@/common/request";
 
 export default async function scriptController(fastify: FastifyInstance) {
   fastify.get(
@@ -9,13 +10,41 @@ export default async function scriptController(fastify: FastifyInstance) {
       reply: FastifyReply,
     ) => {
       const { projectId } = request.params;
-      console.log(projectId);
       if (!isValidProjectId(projectId)) {
-        return request.server.httpErrors.badRequest(
-          "This project ID is not allowed.",
+        reply.send(
+          request.server.httpErrors.badRequest(
+            "This project ID is not allowed.",
+          ),
         );
+        return;
       }
-      return "ok";
+
+      const instance = await browserClient.create(SiteType.CLARITY_INJECT);
+      const response = await instance.get(
+        "https://www.clarity.ms/tag/" + projectId,
+        {
+          params: request.query,
+        },
+      );
+      const hostURI = getCurrentHostURI(request);
+      console.log(hostURI);
+      const originalScript = response.data as string;
+      const modifiedScript = originalScript
+        .replace(
+          /https:\/\/[^/]+\.clarity\.ms\/collect/g,
+          `${hostURI}/collect?server=$1`,
+        )
+        .replace(
+          /https:\/\/[^/]+\.clarity\.ms\/([^"]+)\.gif/g,
+          `${hostURI}/session/$1.gif?server=$1`,
+        )
+        .replace(
+          /https:\/\/www\.clarity\.ms\/s\/(.+)\/clarity\.js/,
+          `${hostURI}/static/$1/tracker.js`,
+        );
+
+      reply.send(modifiedScript);
+      return;
     },
   );
 }
