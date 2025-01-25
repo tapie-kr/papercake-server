@@ -32,7 +32,6 @@ export default async function staticController(fastify: FastifyInstance) {
           .code(200)
           .type("application/javascript")
           .header("X-Cache", cached ? "HIT" : "MISS");
-
         return content;
       } catch (error) {
         request.log.error(error);
