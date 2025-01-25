@@ -23,7 +23,7 @@ export default async function staticController(fastify: FastifyInstance) {
           reply.header(
             "Set-Cookie",
             cookieArray.map((cookie) =>
-              cookie.replace(/Domain=[^;]+;/i, "Domain=localhost;"),
+              cookie.replace(/Domain=[^;]+;/i, `Domain=${request.hostname};`),
             ),
           );
         }
