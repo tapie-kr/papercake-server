@@ -6,7 +6,10 @@ export default async function scriptController(fastify: FastifyInstance) {
   fastify.get(
     "/tag/:projectId",
     async (
-      request: FastifyRequest<{ Params: { projectId: string } }>,
+      request: FastifyRequest<{
+        Params: { projectId: string };
+        Querystring: { headerCopy?: string };
+      }>,
       reply: FastifyReply,
     ) => {
       const { projectId } = request.params;
@@ -20,12 +23,18 @@ export default async function scriptController(fastify: FastifyInstance) {
       }
 
       const instance = await browserClient.create(SiteType.CLARITY_INJECT);
+
+      const { headerCopy, ...queryParams } = request.query;
+      const requestHeaders = headerCopy === "no" ? {} : request.headers;
+
+      const axiosConfig = {
+        params: queryParams,
+        headers: requestHeaders,
+      };
+
       const response = await instance.get(
         "https://www.clarity.ms/tag/" + projectId,
-        {
-          params: request.query,
-          headers: request.headers,
-        },
+        axiosConfig,
       );
       const hostURI = getCurrentHostURI(request);
       const originalScript = response.data as string;
