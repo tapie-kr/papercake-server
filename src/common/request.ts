@@ -2,10 +2,16 @@ import axios, { AxiosInstance, AxiosRequestConfig } from "axios";
 
 export enum SiteType {
   CLARITY_INJECT = "CLARITY_INJECT",
+  SESSION_CREATE = "SESSION_CREATE",
 }
 
 const defaultHeaders: Record<SiteType, Record<string, string>> = {
   [SiteType.CLARITY_INJECT]: {},
+  [SiteType.SESSION_CREATE]: {
+    Accept: "image/avif,image/webp,image/apng,image/svg+xml,image/*,*/*;q=0.8",
+    "Accept-Encoding": "gzip, deflate, br, zstd",
+    priority: "i",
+  },
 };
 
 export class BrowserClient {
