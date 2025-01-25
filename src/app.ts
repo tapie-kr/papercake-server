@@ -2,6 +2,7 @@ import "dotenv/config";
 import Fastify from "fastify";
 import { readFileSync } from "node:fs";
 import fastifyCors from "@fastify/cors";
+import fastifySensible from "@fastify/sensible";
 import staticController from "@/controller/static.controller";
 
 async function createApp() {
@@ -20,6 +21,7 @@ async function createApp() {
     credentials: true,
     methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
   });
+  await server.register(fastifySensible);
 
   await server.register(staticController);
 
