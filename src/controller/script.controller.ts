@@ -31,7 +31,7 @@ export default async function scriptController(fastify: FastifyInstance) {
       const originalScript = response.data as string;
       const modifiedScript = originalScript
         .replace(
-          /https:\/\/[^/]+\.clarity\.ms\/collect/g,
+          /https:\/\/([^/]+)\.clarity\.ms\/collect/g,
           `${hostURI}/collect?server=$1`,
         )
         .replace(
