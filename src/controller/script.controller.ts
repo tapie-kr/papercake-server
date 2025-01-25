@@ -1,5 +1,9 @@
 import { FastifyInstance, FastifyRequest, FastifyReply } from "fastify";
-import { isValidProjectId, getCurrentHostURI } from "@/common/utils";
+import {
+  isValidProjectId,
+  getCurrentHostURI,
+  convertAxiosHeadersToFastify,
+} from "@/common/utils";
 import { browserClient, SiteType } from "@/common/request";
 
 export default async function scriptController(fastify: FastifyInstance) {
@@ -25,7 +29,13 @@ export default async function scriptController(fastify: FastifyInstance) {
       const instance = await browserClient.create(SiteType.CLARITY_INJECT);
 
       const { headerCopy, ...queryParams } = request.query;
-      const requestHeaders = headerCopy === "no" ? {} : request.headers;
+      const requestHeaders =
+        headerCopy === "no"
+          ? {}
+          : {
+              ...request.headers,
+              "Sec-Ch-Ua-Mobile": "?0",
+            };
 
       const axiosConfig = {
         params: queryParams,
@@ -36,6 +46,7 @@ export default async function scriptController(fastify: FastifyInstance) {
         "https://www.clarity.ms/tag/" + projectId,
         axiosConfig,
       );
+      console.log(response.status);
       const hostURI = getCurrentHostURI(request);
       const originalScript = response.data as string;
       const modifiedScript = originalScript
@@ -51,6 +62,7 @@ export default async function scriptController(fastify: FastifyInstance) {
           /https:\/\/www\.clarity\.ms\/s\/(.+)\/clarity\.js/,
           `${hostURI}/static/$1/tracker.js`,
         );
+      const headers = convertAxiosHeadersToFastify(response.headers, request);
 
       reply.send(modifiedScript);
       return;
