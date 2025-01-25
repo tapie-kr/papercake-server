@@ -14,6 +14,10 @@ export class BrowserClient {
   constructor() {
     this.axiosInstance = axios.create({
       timeout: 5000,
+      maxRedirects: 0,
+      validateStatus: (status) => {
+        return status >= 200 && status < 400;
+      },
     });
   }
 
