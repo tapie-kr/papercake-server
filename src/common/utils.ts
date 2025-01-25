@@ -23,4 +23,24 @@ function getCurrentHostURI(request: FastifyRequest): string {
     : `${protocol}://${hostname}:${port}`;
 }
 
+export function convertAxiosHeadersToFastify(
+  headers: Record<string, any>,
+  request: FastifyRequest,
+  excludeKeys: string[] = ["location"],
+): Record<string, string | string[]> {
+  return Object.entries(headers).reduce(
+    (acc, [key, value]) => {
+      if (key === "set-cookie" && Array.isArray(value)) {
+        acc[key] = value.map((cookie) =>
+          cookie.replace(/domain=[^;]+/gi, `domain=${request.hostname}`),
+        );
+      } else if (!excludeKeys.includes(key)) {
+        acc[key] = value;
+      }
+      return acc;
+    },
+    {} as Record<string, string | string[]>,
+  );
+}
+
 export { parseENVList, isValidProjectId, getCurrentHostURI };
