@@ -5,6 +5,7 @@ import fastifyCors from "@fastify/cors";
 import fastifySensible from "@fastify/sensible";
 import staticController from "@/controller/static.controller";
 import scriptController from "@/controller/script.controller";
+import sessionController from "@/controller/session.controller";
 
 async function createApp() {
   const httpsOptions = {
@@ -26,6 +27,7 @@ async function createApp() {
 
   await server.register(staticController);
   await server.register(scriptController);
+  await server.register(sessionController);
 
   return server;
 }
