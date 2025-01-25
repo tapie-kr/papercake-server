@@ -1,10 +1,7 @@
 import "dotenv/config";
 
 function parseENVList(input: string): string[] {
-  const valueString = input.split("=")[1]?.trim();
-  if (!valueString) return [];
-
-  return valueString.split(",").map((id) => id.trim());
+  return input.split(",").map((id) => id.trim());
 }
 
 const ALLOW_PROJECT_ID = parseENVList(
