@@ -1,15 +1,9 @@
 import { FastifyInstance, FastifyRequest, FastifyReply } from "fastify";
 import {
-  convertAxiosHeadersToFastify,
-  getCurrentHostURI,
-  isValidProjectId,
-} from "@/common/utils";
-import {
   SessionSecondStepQuery,
   SessionThirdStepQuery,
 } from "@/common/variable";
 import { handleRedirectSession, handleDataSession } from "@/common/session";
-import { browserClient, SiteType } from "@/common/request";
 
 // https://localhost/session/c/c.gif
 
@@ -39,7 +33,9 @@ export default async function sessionController(fastify: FastifyInstance) {
       try {
         if (Object.keys(request.query).length === 0) {
           await handleRedirectSession(sessionParams);
-        } else if (SessionSecondStepQuery.every((key) => key in request.query)) {
+        } else if (
+          SessionSecondStepQuery.every((key) => key in request.query)
+        ) {
           await handleRedirectSession({
             ...sessionParams,
             query: request.query,
